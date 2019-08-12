@@ -1,20 +1,20 @@
 language: go
 go:
-  - 1.12.x
+- 1.12.x
 addons:
   apt:
     packages:
-      - python3
+    - python3
 script:
-  - "python3 ./build.py -create-sample"
+- python3 ./build.py -create-sample
 before_deploy:
-  - "go version"
-  - "ls -al"
-  - "python3 ./build.py -build"
+- go version
+- ls -al
+- python3 ./build.py -build
 deploy:
   provider: releases
-  api_key: 
-    secure: "mgmPnYcGDb+Yx6xp+GD9AjaJ0+mR66Wm8ojX508dU/F1Si8ZsUxvvD++EqetodOPGmu+Rz6Ms8EWOi4+EBe32I0Ubiv3m9J1Pu6F7Zt3PZpmttjMA3APph7MuBpRugecINOeZbxEjgwBQ0YDXCt0sFLrU5KlpEQLkSFzp3IMAEA4MxsC5C/CH7I+dorxSMmIqlopbn5nRkTZB3ppyl46ts5ZYmxWugG5HHLBpVe7nbeeHKp84o6/gqXwzBhUjYA7ICA4B5Z+MfN0yghL8QliiOHwpqlui1eb6zjFpkWABxq3ABPjF1DqLw9U2dzK9NZuVOvM9pCOkVzMhbIHR2yWSU0NIpDoiqKL+zeDTPPNO3xo6EspfMmWgZKwxhtKt/afkvV27ACXF/Z6mpCrSHzfQmhXYkNQk9Lch4sW7RBhT8QEP0D3BhJyhi66gndJ3+ALh1Za2G0SfnlGVqNvrk4+mhMFvlEXPv8cWtQapsbwkA4QzpBPQ5a86jliN8ZLo//853/ZO/4KoumXi1Z+8Y/oyU9gnUvLZp0Tx7GZ/zyWBDRtQcPIz0hVS3KvvEGiRqzE9YLwUFxq3lBPMiQIcfA0NR6xCbqAEKVTD+JEGlJc3fVHx/lYz5DwF/XeXuXUJn6jtp5DautBqJIFcVbHa3EaaRA67wNASVqdsvG7GtUxArg="
+  api_key:
+    secure: LMhCmYeVCCHH0OfApJslNSrNSmolmRuWqhT/1QsBTt7q1yeDy4pW8b4tKhn6PxnXWboidV70Wn0kPpc5DOBAnFd4dzrbyHd4CVfubo/Xw/D9EZ9FMWXqYZDYIIGC+TJMNuDl1M4ZL/JwY+95yVYrwUbbbHq2Q+y+NOI5z5T7FCcuecEBRpX7sg5warSqLPbkkKi7lqThwaxuOou7ylNuTopaLczOfzw0Twv55TscnLrZgPIv6FlKRbyrZDJwEIuFMBhyw2M2n6HEr52GMjsesCmeBbUUq5cqHb4aFBzeDM7lDYT2RAz8vXpiMZYwAvtsy76Vp4mp4N7wFOPYstoi26JUALBDA3VoQvAC7FTQlY93eMwlD7HavqPo4xvXN46Pyq7oika6n/FFHc+jzDSXl1Sfupi9v7KYW8nvFqxSkLva+GrIr9Vm6AeIzOFu1FfuiuRY0nwpbKTkGFs9a0geqLGGvYbhoioMU6S0itaLoQpeCfcF+CgRCDYXj3Jk752lSZFpRfI+l7LCed5QBr4jKjE6IMuIIUVLM1j/nyzBUOFWUyNugJGFnDJtjtimZuzcHrmHoSFzrBx4mTwltBdpSRh2DftT4VXhst78qg4gO/dOWkut255oiF/s0mTd0oA4doESuvc/FiDXiaB+BqI5A3UfdWv+LBbBGydN9QmInJs=
   file:
     - overture-darwin-amd64.zip
     - overture-linux-386.zip
@@ -34,3 +34,4 @@ deploy:
   skip_cleanup: true
   on:
     tags: true
+

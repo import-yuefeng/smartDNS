@@ -3,8 +3,13 @@ module github.com/import-yuefeng/smartDNS
 go 1.12
 
 require (
-	github.com/miekg/dns v1.1.8
+	github.com/konsorten/go-windows-terminal-sequences v1.0.2 // indirect
+	github.com/miekg/dns v1.1.15
 	github.com/sirupsen/logrus v1.4.2
-	golang.org/x/net v0.0.0-20190404232315-eb5bcb51f2a3
-	golang.org/x/sync v0.0.0-20190423024810-112230192c58 // indirect
+	github.com/stretchr/objx v0.2.0 // indirect
+	golang.org/x/crypto v0.0.0-20190701094942-4def268fd1a4 // indirect
+	golang.org/x/net v0.0.0-20190724013045-ca1201d0de80
+	golang.org/x/sys v0.0.0-20190812073006-9eafafc0a87e // indirect
+	golang.org/x/text v0.3.2 // indirect
+	golang.org/x/tools v0.0.0-20190809145639-6d4652c779c4 // indirect
 )

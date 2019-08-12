@@ -1,0 +1,78 @@
+{
+  "BindAddress": ":53",
+  "DebugHTTPAddress": "127.0.0.1:5555",
+  "DNSBunch": {
+    "HK-DNS": [
+      {
+        "Name": "Microsoft-HK",
+        "Address": "47.91.128.195:53",
+        "Protocol": "udp",
+        "SOCKS5Address": "",
+        "Timeout": 6,
+        "EDNSClientSubnet": {
+          "Policy": "disable",
+          "ExternalIP": "",
+          "NoCookie": false
+        }
+      },
+      {
+        "Name": "Google-HK",
+        "Address": "8.8.8.8:53",
+        "Protocol": "udp",
+        "SOCKS5Address": "",
+        "Timeout": 3,
+        "EDNSClientSubnet": {
+          "Policy": "enable",
+          "ExternalIP": "",
+          "NoCookie": false
+        }
+      }
+    ],
+    "CN-DNS": [
+      {
+        "Name": "ChinaTelecom-CN",
+        "Address": "114.114.114.114:53",
+        "Protocol": "udp",
+        "SOCKS5Address": "",
+        "Timeout": 6,
+        "EDNSClientSubnet": {
+          "Policy": "disable",
+          "ExternalIP": "",
+          "NoCookie": false
+        }
+      },
+      {
+        "Name": "Baidu-CN",
+        "Address": "180.76.76.76:53",
+        "Protocol": "udp",
+        "SOCKS5Address": "",
+        "Timeout": 6,
+        "EDNSClientSubnet": {
+          "Policy": "disable",
+          "ExternalIP": "",
+          "NoCookie": false
+        }
+      }
+    ]
+  },
+  "DNSFilter": {
+    "HK-DNS": {
+      "IPNetworkFile": "",
+      "DomainFile": "configuration/hk.domain",
+      "Matcher": "regex-list"
+    },
+    "CN-DNS": {
+      "IPNetworkFile": "",
+      "DomainFile": "configuration/cn.domain",
+      "Matcher": "regex-list"
+    }
+  },
+  "IPv6UseAlternativeDNS": false,
+  "HostsFile": "./hosts",
+  "MinimumTTL": 0,
+  "DomainTTLFile": "./domain_ttl_sample",
+  "CacheSize": 0,
+  "RejectQType": [
+    255
+  ]
+}

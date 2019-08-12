@@ -1,4 +1,4 @@
-# smartDNS
+# smartDNS (based on overture)
 ![smartDNS](https://github.com/import-yuefeng/smartDNS/blob/master/smartDNS.png)
 
 [![Build Status](https://travis-ci.org/import-yuefeng/smartDNS.svg)](https://travis-ci.org/import-yuefeng/smartDNS)

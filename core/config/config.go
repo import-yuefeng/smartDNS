@@ -36,6 +36,7 @@ type Config struct {
 	BindAddress           string
 	DebugHTTPAddress      string
 	IPv6UseAlternativeDNS bool
+	DefaultDNSBundle      string
 	HostsFile             string
 	MinimumTTL            int
 	DomainTTLFile         string

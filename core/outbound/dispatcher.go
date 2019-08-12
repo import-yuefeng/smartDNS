@@ -21,11 +21,11 @@ type Dispatcher struct {
 	RedirectIPv6Record bool
 	MinimumTTL         int
 	DomainTTLMap       map[string]uint32
-
-	DNSFilter map[string]*common.Filter
-	DNSBunch  map[string][]*common.DNSUpstream
-	Hosts     *hosts.Hosts
-	Cache     *cache.Cache
+	DefaultDNSBundle   string
+	DNSFilter          map[string]*common.Filter
+	DNSBunch           map[string][]*common.DNSUpstream
+	Hosts              *hosts.Hosts
+	Cache              *cache.Cache
 }
 
 type HitTask struct {
@@ -60,22 +60,22 @@ func (d *Dispatcher) Exchange(query *dns.Msg, inboundIP string) *dns.Msg {
 	// local Domain, ip
 	ch := make(chan *HitTask, len(ClientsBundle))
 	// hitList := list.New()
-	bundleLen := len(ClientsBundle)
+	bundleLenght := len(ClientsBundle)
 	var c = new(HitTask)
 	for bunchName := range ClientsBundle {
 		go func(ch chan *HitTask, bunchName string) {
 			c.isHit = d.isSelectDomain(ClientsBundle[bunchName], d.DNSFilter[bunchName].DomainList)
-			if c.isHit {
-				c.hitRemoteClientBundle = ClientsBundle[bunchName]
-				ch <- c
-			}
+			// if c.isHit {
+			c.hitRemoteClientBundle = ClientsBundle[bunchName]
+			ch <- c
+			// }
 			return
 		}(ch, bunchName)
 	}
-	for bundleLen != 0 {
-		log.Info(bundleLen)
+	for bundleLenght > 0 {
 		if x, ok := <-ch; ok {
-			bundleLen--
+			log.Info(x.isHit)
+			bundleLenght--
 			if x.isHit {
 				// hitList.PushBack(x.hitRemoteClientBundle)
 				ActiveClientBundle = x.hitRemoteClientBundle
@@ -85,10 +85,12 @@ func (d *Dispatcher) Exchange(query *dns.Msg, inboundIP string) *dns.Msg {
 			}
 		}
 	}
-	if ActiveClientBundle == nil {
-		log.Info("Domain match failed return nil.")
-		// TODO: need to set a default bundle
+	if ActiveClientBundle == nil && d.DefaultDNSBundle == "" {
+		log.Info("Domain match failed return nil; DefaultDNSBundle is nil, return nil")
 		return nil
+	} else if d.DefaultDNSBundle != "" {
+		log.Infof("Use default dns bundle: %s", d.DefaultDNSBundle)
+		ActiveClientBundle = ClientsBundle[d.DefaultDNSBundle]
 	}
 	return ActiveClientBundle.Exchange(true, true)
 	// isCache bool, isLog bool

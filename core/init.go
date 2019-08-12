@@ -16,7 +16,7 @@ func InitServer(configFilePath string) {
 	conf := config.NewConfig(configFilePath)
 	//New dispatcher without RemoteClientBundle, RemoteClientBundle must be initiated when server is running
 	dispatcher := outbound.Dispatcher{
-
+		DefaultDNSBundle:   conf.DefaultDNSBundle,
 		DNSFilter:          conf.DNSFilter,
 		DNSBunch:           conf.DNSBunch,
 		RedirectIPv6Record: conf.IPv6UseAlternativeDNS,

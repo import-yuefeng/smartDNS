@@ -58,15 +58,16 @@
   "DNSFilter": {
     "HK-DNS": {
       "IPNetworkFile": "",
-      "DomainFile": "configuration/hk.domain",
+      "DomainFile": "hk.domain",
       "Matcher": "regex-list"
     },
     "CN-DNS": {
       "IPNetworkFile": "",
-      "DomainFile": "configuration/cn.domain",
+      "DomainFile": "cn.domain",
       "Matcher": "regex-list"
     }
   },
+  "DefaultDNSBundle":"HK-DNS",
   "IPv6UseAlternativeDNS": false,
   "HostsFile": "./hosts",
   "MinimumTTL": 0,

@@ -16,21 +16,21 @@ deploy:
   api_key:
     secure: LMhCmYeVCCHH0OfApJslNSrNSmolmRuWqhT/1QsBTt7q1yeDy4pW8b4tKhn6PxnXWboidV70Wn0kPpc5DOBAnFd4dzrbyHd4CVfubo/Xw/D9EZ9FMWXqYZDYIIGC+TJMNuDl1M4ZL/JwY+95yVYrwUbbbHq2Q+y+NOI5z5T7FCcuecEBRpX7sg5warSqLPbkkKi7lqThwaxuOou7ylNuTopaLczOfzw0Twv55TscnLrZgPIv6FlKRbyrZDJwEIuFMBhyw2M2n6HEr52GMjsesCmeBbUUq5cqHb4aFBzeDM7lDYT2RAz8vXpiMZYwAvtsy76Vp4mp4N7wFOPYstoi26JUALBDA3VoQvAC7FTQlY93eMwlD7HavqPo4xvXN46Pyq7oika6n/FFHc+jzDSXl1Sfupi9v7KYW8nvFqxSkLva+GrIr9Vm6AeIzOFu1FfuiuRY0nwpbKTkGFs9a0geqLGGvYbhoioMU6S0itaLoQpeCfcF+CgRCDYXj3Jk752lSZFpRfI+l7LCed5QBr4jKjE6IMuIIUVLM1j/nyzBUOFWUyNugJGFnDJtjtimZuzcHrmHoSFzrBx4mTwltBdpSRh2DftT4VXhst78qg4gO/dOWkut255oiF/s0mTd0oA4doESuvc/FiDXiaB+BqI5A3UfdWv+LBbBGydN9QmInJs=
   file:
-    - overture-darwin-amd64.zip
-    - overture-linux-386.zip
-    - overture-linux-amd64.zip
-    - overture-linux-arm.zip
-    - overture-linux-arm64.zip
-    - overture-linux-mips-softfloat.zip
-    - overture-linux-mips-hardfloat.zip
-    - overture-linux-mipsle-softfloat.zip
-    - overture-linux-mipsle-hardfloat.zip
-    - overture-linux-mips64.zip
-    - overture-linux-mips64le.zip
-    - overture-freebsd-386.zip
-    - overture-freebsd-amd64.zip
-    - overture-windows-386.zip
-    - overture-windows-amd64.zip
+    - smartDNS-darwin-amd64.zip
+    - smartDNS-linux-386.zip
+    - smartDNS-linux-amd64.zip
+    - smartDNS-linux-arm.zip
+    - smartDNS-linux-arm64.zip
+    - smartDNS-linux-mips-softfloat.zip
+    - smartDNS-linux-mips-hardfloat.zip
+    - smartDNS-linux-mipsle-softfloat.zip
+    - smartDNS-linux-mipsle-hardfloat.zip
+    - smartDNS-linux-mips64.zip
+    - smartDNS-linux-mips64le.zip
+    - smartDNS-freebsd-386.zip
+    - smartDNS-freebsd-amd64.zip
+    - smartDNS-windows-386.zip
+    - smartDNS-windows-amd64.zip
   skip_cleanup: true
   on:
     tags: true

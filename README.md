@@ -1,7 +1,7 @@
 # smartDNS (based on overture)
 ![smartDNS](https://github.com/import-yuefeng/smartDNS/blob/master/smartDNS.png)
 
-[![Build Status](https://travis-ci.org/import-yuefeng/smartDNS.svg)](https://travis-ci.org/import-yuefeng/smartDNS)
+[![Build Status](https://travis-ci.com/import-yuefeng/smartDNS.svg)](https://travis-ci.com/import-yuefeng/smartDNS)
 [![GoDoc](https://godoc.org/github.com/import-yuefeng/smartDNS?status.svg)](https://godoc.org/github.com/import-yuefeng/smartDNS)
 [![Go Report Card](https://goreportcard.com/badge/github.com/import-yuefeng/smartDNS)](https://goreportcard.com/report/github.com/import-yuefeng/smartDNS)
 

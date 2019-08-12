@@ -1,5 +1,8 @@
 # smartDNS (based on overture)
-![smartDNS](https://github.com/import-yuefeng/smartDNS/blob/master/smartDNS.png)
+
+<img src="https://github.com/import-yuefeng/smartDNS/blob/master/smartDNS.png" width="150">
+
+----
 
 [![Build Status](https://travis-ci.com/import-yuefeng/smartDNS.svg)](https://travis-ci.com/import-yuefeng/smartDNS)
 [![GoDoc](https://godoc.org/github.com/import-yuefeng/smartDNS?status.svg)](https://godoc.org/github.com/import-yuefeng/smartDNS)

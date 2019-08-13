@@ -1,6 +1,5 @@
-# smartDNS
 
-# smartDNS (based on overture)
+# smartDNS (基于 overture)
 
 <img src="https://github.com/import-yuefeng/smartDNS/blob/master/smartDNS.png" width="150">
 
@@ -9,6 +8,8 @@
 [![Build Status](https://travis-ci.com/import-yuefeng/smartDNS.svg)](https://travis-ci.com/import-yuefeng/smartDNS)
 [![GoDoc](https://godoc.org/github.com/import-yuefeng/smartDNS?status.svg)](https://godoc.org/github.com/import-yuefeng/smartDNS)
 [![Go Report Card](https://goreportcard.com/badge/github.com/import-yuefeng/smartDNS)](https://goreportcard.com/report/github.com/import-yuefeng/smartDNS)
+
+**由于smartDNS 还在开发的早期，请暂时不要将 smartDNS 用于生产环境！**
 
 smartDNS 是一个用 Go 实现的 智能的DNS 服务/转发/调度器 .
 

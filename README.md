@@ -1,4 +1,4 @@
-<p align="right">En | <a href="./README-CN.md.md">中文简体</a>
+<p align="right">En | <a href="https://github.com/import-yuefeng/smartDNS/blob/master/README-CN.md">中文简体</a>
 
 # smartDNS (based on overture)
 

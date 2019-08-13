@@ -28,6 +28,15 @@ type RemoteClientBundle struct {
 	Name  string
 }
 
+type CacheMessage struct {
+	ResponseMessage *dns.Msg
+	QuestionMessage *dns.Msg
+
+	MinimumTTL int
+	BundleName string
+	DomainName string
+}
+
 func NewClientBundle(q *dns.Msg, ul []*common.DNSUpstream, ip string, minimumTTL int, cache *cache.Cache, name string, domainTTLMap map[string]uint32) *RemoteClientBundle {
 	cb := &RemoteClientBundle{questionMessage: q.Copy(), dnsUpstreams: ul, inboundIP: ip, minimumTTL: minimumTTL, cache: cache, Name: name, domainTTLMap: domainTTLMap}
 
@@ -40,9 +49,8 @@ func NewClientBundle(q *dns.Msg, ul []*common.DNSUpstream, ip string, minimumTTL
 	return cb
 }
 
-func (cb *RemoteClientBundle) Exchange(isCache bool, isLog bool) *dns.Msg {
+func (cb *RemoteClientBundle) Exchange(isLog bool) *CacheMessage {
 	ch := make(chan *RemoteClient, len(cb.clients))
-
 	for _, o := range cb.clients {
 		go func(c *RemoteClient, ch chan *RemoteClient) {
 			c.Exchange(isLog)
@@ -50,8 +58,10 @@ func (cb *RemoteClientBundle) Exchange(isCache bool, isLog bool) *dns.Msg {
 		}(o, ch)
 	}
 
-	var ec *RemoteClient
-
+	var (
+		ec *RemoteClient
+	)
+	cacheMessage := new(CacheMessage)
 	for i := 0; i < len(cb.clients); i++ {
 		c := <-ch
 		if c != nil {
@@ -60,37 +70,15 @@ func (cb *RemoteClientBundle) Exchange(isCache bool, isLog bool) *dns.Msg {
 			// use dns that first response
 		}
 	}
-
 	if ec != nil && ec.responseMessage != nil {
-		cb.responseMessage = ec.responseMessage
-		cb.questionMessage = ec.questionMessage
+		cacheMessage.ResponseMessage = ec.responseMessage
+		cacheMessage.QuestionMessage = ec.questionMessage
 
-		common.SetMinimumTTL(cb.responseMessage, uint32(cb.minimumTTL))
-		common.SetTTLByMap(cb.responseMessage, cb.domainTTLMap)
-
-		if isCache {
-			cb.CacheResultIfNeeded()
-		}
+		common.SetMinimumTTL(cacheMessage.ResponseMessage, uint32(cacheMessage.MinimumTTL))
+		common.SetTTLByMap(cacheMessage.ResponseMessage, cb.domainTTLMap)
 	}
 
-	return cb.responseMessage
-}
-
-func (cb *RemoteClientBundle) ExchangeFromCache() *dns.Msg {
-	// clientBundle to client
-	for _, o := range cb.clients {
-		cb.responseMessage = o.ExchangeFromCache()
-		if cb.responseMessage != nil {
-			return cb.responseMessage
-		}
-	}
-	return cb.responseMessage
-}
-
-func (cb *RemoteClientBundle) CacheResultIfNeeded() {
-	if cb.cache != nil {
-		cb.cache.InsertMessage(cache.Key(cb.questionMessage.Question[0], common.GetEDNSClientSubnetIP(cb.questionMessage)), cb.responseMessage, uint32(cb.minimumTTL))
-	}
+	return cacheMessage
 }
 
 func (cb *RemoteClientBundle) IsType(t uint16) bool {

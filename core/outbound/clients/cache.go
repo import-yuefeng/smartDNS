@@ -28,29 +28,20 @@ type CacheClient struct {
 	cache *cache.Cache
 }
 
-func NewCacheClient(q *dns.Msg, ip string, cache *cache.Cache) *CacheClient {
-	return &CacheClient{questionMessage: q.Copy(), ednsClientSubnetIP: ip, cache: cache}
+func NewCacheClient(q *dns.Msg, cache *cache.Cache) *CacheClient {
+	// return &CacheClient{questionMessage: q.Copy(), ednsClientSubnetIP: ip, cache: cache}
+	return &CacheClient{questionMessage: q.Copy(), cache: cache}
+
 }
 
-func (c *CacheClient) Exchange() *dns.Msg {
-	if c.exchangeFromCache() {
-		return c.responseMessage
-	}
-
-	return nil
-}
-
-func (c *CacheClient) exchangeFromCache() bool {
+func (c *CacheClient) Exchange() (isHit bool, BundleName string, _ *dns.Msg) {
 	if c.cache == nil {
-		return false
+		return false, "", nil
 	}
-
-	m := c.cache.Hit(cache.Key(c.questionMessage.Question[0], c.ednsClientSubnetIP), c.questionMessage.Id)
-	if m != nil {
-		log.Debugf("Cache hit: %s", cache.Key(c.questionMessage.Question[0], c.ednsClientSubnetIP))
-		c.responseMessage = m
-		return true
+	key := cache.Key(c.questionMessage.Question[0], c.ednsClientSubnetIP)
+	isHit, bundleName, msg := c.cache.Hit(key, c.questionMessage.Id)
+	if isHit {
+		log.Debugf("Cache hit: %s", key)
 	}
-
-	return false
+	return isHit, bundleName, msg
 }

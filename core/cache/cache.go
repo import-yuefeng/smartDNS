@@ -32,11 +32,10 @@ type FastMap struct {
 
 type elem struct {
 	// time added + TTL, after this the elem is invalid
-	expiration time.Time
-	msg        *dns.Msg
-	// fastMap    *FastMap
-	// next       *elem
-	// before     *elem
+	expiration   time.Time
+	msg          *dns.Msg
+	fastMap      *FastMap
+	next, before *elem
 }
 
 // Cache is a cache that holds on the a number of RRs or DNS messages. The cache
@@ -57,14 +56,23 @@ func New(capacity int) *Cache {
 	c := new(Cache)
 	c.domain = make(map[string]*elem)
 	c.capacity = capacity
+	c.head = new(elem)
+	firstNode := new(elem)
+	firstNode.before, firstNode.next = c.head, nil
+
+	c.head.next, c.head.before = firstNode, nil
 	return c
 }
 
 func (c *Cache) Capacity() int { return c.capacity }
 
-func (c *Cache) Remove(s string) {
+func (c *Cache) Remove(key string) {
 	c.Lock()
-	delete(c.domain, s)
+	delElem := c.domain[key]
+	delElem.before.next, delElem.next.before = delElem.next, delElem.before
+
+	delElem.next, delElem.before = nil, nil
+	delete(c.domain, key)
 	// Use built-in functions for map
 	c.Unlock()
 }
@@ -86,13 +94,12 @@ func (c *Cache) EvictRandom() {
 	}
 }
 
-// InsertMessage inserts a message in the Cache. We will cache it for ttl seconds, which
+// Insert inserts a DNS message to the Cache. We will cache it for ttl seconds, which
 // should be a small (60...300) integer.
-func (c *Cache) InsertMessage(s string, m *dns.Msg, mTTL uint32) {
+func (c *Cache) Insert(key string, m *dns.Msg, mTTL uint32, dnsBundleName string, domainName string) {
 	if c.capacity <= 0 || m == nil {
 		return
 	}
-
 	c.Lock()
 	var ttl uint32
 	if len(m.Answer) == 0 {
@@ -101,28 +108,37 @@ func (c *Cache) InsertMessage(s string, m *dns.Msg, mTTL uint32) {
 		ttl = m.Answer[0].Header().Ttl
 	}
 	ttlDuration := time.Duration(ttl) * time.Second
-	if _, ok := c.domain[s]; !ok {
+	if _, ok := c.domain[key]; !ok {
 		// Insert elem to cache when Cache not have the elem.
-		c.domain[s] = &elem{time.Now().UTC().Add(ttlDuration), m.Copy()}
+		fastMap := new(FastMap)
+		fastMap.dnsBundle, fastMap.domain = dnsBundleName, domainName
+
+		newElem := new(elem)
+		newElem.expiration, newElem.msg, newElem.fastMap = time.Now().UTC().Add(ttlDuration), m.Copy(), fastMap
+
+		c.head.next.before = newElem
+
+		newElem.next, newElem.before = c.head.next, c.head
+		c.head.next = newElem
+		c.domain[key] = newElem
 	}
-	log.Debugf("Cached: %s", s)
-	c.EvictRandom()
+	log.Debugf("Cached: %s", key)
 	c.Unlock()
 }
 
 // Search returns a dns.Msg, the expiration time and a boolean indicating if we found something
 // in the cache.
 // todo: use finder implementation
-func (c *Cache) Search(s string) (*dns.Msg, time.Time, bool) {
+func (c *Cache) Search(key string) (*elem, time.Time, bool) {
 	if c.capacity <= 0 {
 		return nil, time.Time{}, false
 	}
 	c.RLock()
-	if e, ok := c.domain[s]; ok {
+	if e, ok := c.domain[key]; ok {
 		// find elem in cache
-		e1 := e.msg.Copy()
 		c.RUnlock()
-		return e1, e.expiration, true
+
+		return e, time.Time{}, true
 	}
 	c.RUnlock()
 	return nil, time.Time{}, false
@@ -135,24 +151,25 @@ func Key(q dns.Question, ednsIP string) string {
 
 // Hit returns a dns message from the cache. If the message's TTL is expired nil
 // is returned and the message is removed from the cache.
-func (c *Cache) Hit(key string, msgid uint16) *dns.Msg {
-	m, exp, hit := c.Search(key)
+func (c *Cache) Hit(key string, msgid uint16) (isHit bool, BundleName string, _ *dns.Msg) {
+	pointer, exp, hit := c.Search(key)
 	if hit {
 		// Cache hit! \o/
-		if time.Since(exp) < 0 {
-			m.Id = msgid
-			m.Compress = true
+		if time.Since(exp) > 0 {
+			pointer.msg.Id = msgid
+			pointer.msg.Compress = true
 			// Even if something ended up with the TC bit *in* the cache, set it to off
-			m.Truncated = false
-			for _, a := range m.Answer {
+			pointer.msg.Truncated = false
+			for _, a := range pointer.msg.Answer {
 				a.Header().Ttl = uint32(time.Since(exp).Seconds() * -1)
 			}
-			return m
+			return true, pointer.fastMap.dnsBundle, pointer.msg
 		}
+		// TODO Update program
+		return true, pointer.fastMap.dnsBundle, nil
 		// Expired! /o\
-		c.Remove(key)
 	}
-	return nil
+	return false, "", nil
 }
 
 // Dump returns all dns cache information, for dubugging

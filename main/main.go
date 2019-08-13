@@ -26,13 +26,14 @@ import (
 // For auto version building
 //  go build -ldflags "-X main.version=version"
 var (
-	version string = "0.0.1"
+	version = "0.0.1"
 
 	configPath      = flag.String("c", "./config.json", "config file path")
 	logPath         = flag.String("l", "", "log file path")
 	isLogVerbose    = flag.Bool("v", false, "verbose mode")
 	processorNumber = flag.Int("p", runtime.NumCPU(), "number of processor to use")
-	isShowVersion   = flag.Bool("V", false, "current version of overture")
+	isShowVersion   = flag.Bool("V", false, "current version of smartDNS")
+	query           = flag.String("q", "", "query DNS")
 )
 
 func main() {
@@ -52,7 +53,7 @@ func main() {
 	if *isLogVerbose {
 		log.SetLevel(log.DebugLevel)
 	} else {
-		// log.SetLevel(log.InfoLevel)
+		log.SetLevel(log.InfoLevel)
 		// not use log func
 	}
 
@@ -65,7 +66,7 @@ func main() {
 		}
 	}
 
-	log.Infof("Overture %s", version)
+	log.Infof("smartDNS %s", version)
 	log.Info("If you need any help, please visit the project repository: https://github.com/import-yuefeng/smartDNS")
 
 	runtime.GOMAXPROCS(*processorNumber)

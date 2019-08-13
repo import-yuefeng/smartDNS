@@ -59,12 +59,12 @@
     "HK-DNS": {
       "IPNetworkFile": "",
       "DomainFile": "hk.domain",
-      "Matcher": "regex-list"
+      "Matcher": "suffix-tree"
     },
     "CN-DNS": {
       "IPNetworkFile": "",
       "DomainFile": "cn.domain",
-      "Matcher": "regex-list"
+      "Matcher": "suffix-tree"
     }
   },
   "DefaultDNSBundle":"HK-DNS",
@@ -72,7 +72,7 @@
   "HostsFile": "./hosts",
   "MinimumTTL": 0,
   "DomainTTLFile": "./domain_ttl_sample",
-  "CacheSize": 0,
+  "CacheSize": 1000,
   "RejectQType": [
     255
   ]

@@ -1,3 +1,5 @@
+<p align="right">En | <a href="./docs/README-CN.md.md">中文简体</a>
+
 # smartDNS (based on overture)
 
 <img src="https://github.com/import-yuefeng/smartDNS/blob/master/smartDNS.png" width="150">

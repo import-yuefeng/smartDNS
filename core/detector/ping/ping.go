@@ -34,7 +34,7 @@ func NewPinger(msg *dns.Msg, fastMap *cache.FastMap, DNSBunch map[string][]*comm
 	bundle := new(outbound.Bundle)
 
 	for name, v := range DNSBunch {
-		bundle.ClientsBundle[name] = clients.NewClientBundle(msg, v, "127.0.0.1", 0, nil, name, nil)
+		bundle.ClientBundle[name] = clients.NewClientBundle(msg, v, "127.0.0.1", 0, nil, name, nil)
 	}
 	return &Pinger{fastMap, bundle}
 }
@@ -44,14 +44,14 @@ func (data *Pinger) Detect() (fastMap *cache.FastMap) {
 	domainToIP := make(map[string]string)
 	var ch chan *BundleMsg
 
-	for name, o := range dnsBundle.ClientsBundle {
+	for name, o := range dnsBundle.ClientBundle {
 		go func(c *clients.RemoteClientBundle, ch chan *BundleMsg) {
 			result := c.Exchange(true)
 			ch <- &BundleMsg{result.ResponseMessage, name}
 			return
 		}(o, ch)
 	}
-	for i := 0; i < len(dnsBundle.ClientsBundle); i++ {
+	for i := 0; i < len(dnsBundle.ClientBundle); i++ {
 		c := <-ch
 		if c != nil {
 			dnsRespon := strings.Fields(c.msg.Answer[0].String())
@@ -74,7 +74,7 @@ func (data *Pinger) Detect() (fastMap *cache.FastMap) {
 		}(ip, name, bundle)
 	}
 
-	for i := 0; i < len(dnsBundle.ClientsBundle); i++ {
+	for i := 0; i < len(dnsBundle.ClientBundle); i++ {
 		c := <-ch
 		if c != nil {
 			fastMap.Domain, fastMap.DnsBundle = data.fastMap.Domain, c.bundleName

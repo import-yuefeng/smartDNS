@@ -6,6 +6,7 @@
 
 package finder
 
+//Finder interface  If you need use new finder func, you need to implement Finder interface
 type Finder interface {
 	Insert(k string, v string) error
 	Get(k string) string

@@ -71,7 +71,6 @@ func (cb *RemoteClientBundle) Exchange(isLog bool) *CacheMessage {
 			// use dns that first response
 		}
 	}
-	// defer close(ch)
 	if ec != nil && ec.responseMessage != nil {
 		cacheMessage.ResponseMessage = ec.responseMessage
 		cacheMessage.QuestionMessage = ec.questionMessage

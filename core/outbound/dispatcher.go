@@ -97,7 +97,6 @@ func (d *Dispatcher) Exchange(query *dns.Msg, inboundIP string) *dns.Msg {
 			bundleLenght--
 			if x.isHit {
 				ActiveClientBundle = x.hitRemoteClientBundle
-				close(ch)
 				break
 			}
 		}
@@ -183,7 +182,6 @@ func (d *Dispatcher) selectByIPNetwork(bundle *Bundle) *BundleMsg {
 			i++
 		}
 		if i >= int(float64(len(bundle.ClientBundle))*0.75) {
-			close(ch)
 			break
 		}
 	}

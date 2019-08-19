@@ -28,15 +28,20 @@ type Dispatcher struct {
 	Cache              *cache.Cache
 }
 
+type Bundle struct {
+	ClientBundle map[string]*clients.RemoteClientBundle
+}
+
 type HitTask struct {
 	hitRemoteClientBundle *clients.RemoteClientBundle
 	isHit                 bool
 }
 
 func (d *Dispatcher) Exchange(query *dns.Msg, inboundIP string) *dns.Msg {
-	ClientsBundle := make(map[string]*clients.RemoteClientBundle)
+	bundle := new(Bundle)
+	bundle.ClientBundle = make(map[string]*clients.RemoteClientBundle)
 	for name, v := range d.DNSBunch {
-		ClientsBundle[name] = clients.NewClientBundle(query, v, inboundIP, d.MinimumTTL, d.Cache, name, d.DomainTTLMap)
+		bundle.ClientBundle[name] = clients.NewClientBundle(query, v, inboundIP, d.MinimumTTL, d.Cache, name, d.DomainTTLMap)
 	}
 
 	var ActiveClientBundle *clients.RemoteClientBundle
@@ -57,7 +62,7 @@ func (d *Dispatcher) Exchange(query *dns.Msg, inboundIP string) *dns.Msg {
 			return msg
 		} else if msg == nil && bundleName != "" {
 			log.Infof("Hit Cache, msg is expiration, but bundleName: %s\n", bundleName)
-			ActiveClientBundle = ClientsBundle[bundleName]
+			ActiveClientBundle = bundle.ClientBundle[bundleName]
 			if result := ActiveClientBundle.Exchange(true); result != nil {
 				result.BundleName = ActiveClientBundle.Name
 				d.CacheResultIfNeeded(result)
@@ -67,14 +72,14 @@ func (d *Dispatcher) Exchange(query *dns.Msg, inboundIP string) *dns.Msg {
 	}
 
 	// local Domain, ip
-	ch := make(chan *HitTask, len(ClientsBundle))
-	bundleLenght := len(ClientsBundle)
+	ch := make(chan *HitTask, len(bundle.ClientBundle))
+	bundleLenght := len(bundle.ClientBundle)
 	var c = new(HitTask)
 
-	for bunchName := range ClientsBundle {
+	for bunchName := range bundle.ClientBundle {
 		go func(ch chan *HitTask, bunchName string) {
-			c.isHit = d.isSelectDomain(ClientsBundle[bunchName], d.DNSFilter[bunchName].DomainList)
-			c.hitRemoteClientBundle = ClientsBundle[bunchName]
+			c.isHit = d.isSelectDomain(bundle.ClientBundle[bunchName], d.DNSFilter[bunchName].DomainList)
+			c.hitRemoteClientBundle = bundle.ClientBundle[bunchName]
 			ch <- c
 			return
 		}(ch, bunchName)
@@ -95,7 +100,7 @@ func (d *Dispatcher) Exchange(query *dns.Msg, inboundIP string) *dns.Msg {
 		return nil
 	} else if ActiveClientBundle == nil && d.DefaultDNSBundle != "" {
 		log.Warnf("Use default dns bundle: %s", d.DefaultDNSBundle)
-		ActiveClientBundle = ClientsBundle[d.DefaultDNSBundle]
+		ActiveClientBundle = bundle.ClientBundle[d.DefaultDNSBundle]
 	}
 	if result := ActiveClientBundle.Exchange(true); result != nil {
 		result.BundleName = ActiveClientBundle.Name

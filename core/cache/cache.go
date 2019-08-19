@@ -103,7 +103,6 @@ func (c *Cache) Insert(key string, m *dns.Msg, mTTL uint32, dnsBundleName string
 	if _, ok := c.domain[key]; !ok {
 		// Insert elem to cache when Cache not have the elem.
 		fastMap := new(FastMap)
-		log.Infoln(dnsBundleName, domainName)
 		fastMap.DnsBundle, fastMap.Domain = dnsBundleName, domainName
 		var newElem *elem
 		newElem = new(elem)

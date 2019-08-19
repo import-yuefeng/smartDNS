@@ -40,6 +40,8 @@ type Config struct {
 	HostsFile             string
 	MinimumTTL            int
 	DomainTTLFile         string
+	CacheCrontab          string
+	Dectector             string
 	CacheSize             int
 	RejectQType           []uint16
 	DomainTTLMap          map[string]uint32
@@ -56,7 +58,7 @@ func NewConfig(configFile string) *Config {
 
 	config.DomainTTLMap = getDomainTTLMap(config.DomainTTLFile)
 	// configure will load all DNS filter rule
-	for k, _ := range config.DNSFilter {
+	for k := range config.DNSFilter {
 		config.DNSFilter[k].DomainList = initDomainMatcher(config.DNSFilter[k].DomainFile, config.DNSFilter[k].Matcher)
 		config.DNSFilter[k].IPNetworkList = getIPNetworkList(config.DNSFilter[k].IPNetworkFile)
 	}
@@ -85,7 +87,10 @@ func NewConfig(configFile string) *Config {
 		config.Hosts = h
 		log.Info("Hosts file has been loaded successfully")
 	}
-
+	if len(config.DNSBunch) != len(config.DNSFilter) {
+		log.Fatalf("DNSBunch != DNSFilter", err)
+		os.Exit(1)
+	}
 	return config
 }
 

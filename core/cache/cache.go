@@ -1,6 +1,3 @@
-// Copyright (c) 2014 The SkyDNS Authors. All rights reserved.
-// Use of this source code is governed by The MIT License (MIT) that can be
-// found in the LICENSE file.
 // The MIT License (MIT)
 // Copyright (c) 2019 import-yuefeng
 // Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
@@ -14,6 +11,7 @@ package cache
 // TODO LRU cache link
 
 import (
+	"container/list"
 	"fmt"
 	"sync"
 	"time"
@@ -26,16 +24,15 @@ import (
 // The signature is put in answer, extra is empty there. This wastes some memory.
 
 type FastMap struct {
-	dnsBundle string
-	domain    string
+	DnsBundle string
+	Domain    string
 }
 
 type elem struct {
 	// time added + TTL, after this the elem is invalid
-	expiration   time.Time
-	msg          *dns.Msg
-	fastMap      *FastMap
-	next, before *elem
+	expiration time.Time
+	msg        *dns.Msg
+	fastMap    *FastMap
 }
 
 // Cache is a cache that holds on the a number of RRs or DNS messages. The cache
@@ -45,7 +42,7 @@ type Cache struct {
 
 	capacity int
 	domain   map[string]*elem
-	head     *elem
+	head     *list.List
 }
 
 // New returns a new cache with the capacity and the ttl specified.
@@ -53,49 +50,44 @@ func New(capacity int) *Cache {
 	if capacity <= 0 {
 		return nil
 	}
+
 	c := new(Cache)
 	c.domain = make(map[string]*elem)
 	c.capacity = capacity
-	c.head = new(elem)
-	firstNode := new(elem)
-	firstNode.before, firstNode.next = c.head, nil
+	c.head = list.New()
 
-	c.head.next, c.head.before = firstNode, nil
 	return c
 }
 
+// Capacity func return link-list max capacity
 func (c *Cache) Capacity() int { return c.capacity }
 
-func (c *Cache) Remove(key string) {
-	c.Lock()
-	delElem := c.domain[key]
-	delElem.before.next, delElem.next.before = delElem.next, delElem.before
+// Size func return link-list currently size
+func (c *Cache) Size() int { return c.head.Len() }
 
-	delElem.next, delElem.before = nil, nil
-	delete(c.domain, key)
-	// Use built-in functions for map
+// Head func return link-list head point
+func (c *Cache) Head() *list.List { return c.head }
+
+// Remove any elem based on key
+func (c *Cache) Remove(key string) {
+
+}
+
+// RemoveTail func remove elem for LRU tail
+func (c *Cache) RemoveTail(num int) {
+	// need to delete num elems
+	c.Lock()
+	for i := c.head.Back(); i != nil && num != 0; i = c.head.Back() {
+		key := Key(i.Value.(*elem).msg.Question[0])
+		c.head.Remove(i)
+		delete(c.domain, key)
+		// Use built-in functions for map
+		num--
+	}
 	c.Unlock()
 }
 
-// EvictRandom removes a random member a the cache.
-// Must be called under a write lock.
-func (c *Cache) EvictRandom() {
-	cacheLength := len(c.domain)
-	if cacheLength <= c.capacity {
-		return
-	}
-	i := c.capacity - cacheLength
-	for k := range c.domain {
-		delete(c.domain, k)
-		i--
-		if i == 0 {
-			break
-		}
-	}
-}
-
-// Insert inserts a DNS message to the Cache. We will cache it for ttl seconds, which
-// should be a small (60...300) integer.
+// Insert func inserts a DNS message to the Cache. We will cache it for ttl seconds, which
 func (c *Cache) Insert(key string, m *dns.Msg, mTTL uint32, dnsBundleName string, domainName string) {
 	if c.capacity <= 0 || m == nil {
 		return
@@ -111,24 +103,20 @@ func (c *Cache) Insert(key string, m *dns.Msg, mTTL uint32, dnsBundleName string
 	if _, ok := c.domain[key]; !ok {
 		// Insert elem to cache when Cache not have the elem.
 		fastMap := new(FastMap)
-		fastMap.dnsBundle, fastMap.domain = dnsBundleName, domainName
-
-		newElem := new(elem)
+		log.Infoln(dnsBundleName, domainName)
+		fastMap.DnsBundle, fastMap.Domain = dnsBundleName, domainName
+		var newElem *elem
+		newElem = new(elem)
 		newElem.expiration, newElem.msg, newElem.fastMap = time.Now().UTC().Add(ttlDuration), m.Copy(), fastMap
-
-		c.head.next.before = newElem
-
-		newElem.next, newElem.before = c.head.next, c.head
-		c.head.next = newElem
+		c.head.PushFront(newElem)
 		c.domain[key] = newElem
 	}
 	log.Debugf("Cached: %s", key)
 	c.Unlock()
 }
 
-// Search returns a dns.Msg, the expiration time and a boolean indicating if we found something
+// Search func returns a dns.Msg, the expiration time and a boolean indicating if we found something
 // in the cache.
-// todo: use finder implementation
 func (c *Cache) Search(key string) (*elem, time.Time, bool) {
 	if c.capacity <= 0 {
 		return nil, time.Time{}, false
@@ -138,15 +126,15 @@ func (c *Cache) Search(key string) (*elem, time.Time, bool) {
 		// find elem in cache
 		c.RUnlock()
 
-		return e, time.Time{}, true
+		return e, c.domain[key].expiration, true
 	}
 	c.RUnlock()
 	return nil, time.Time{}, false
 }
 
 // Key creates a hash key from a question section.
-func Key(q dns.Question, ednsIP string) string {
-	return fmt.Sprintf("%s %d %s", q.Name, q.Qtype, ednsIP)
+func Key(q dns.Question) string {
+	return fmt.Sprintf("%s %d", q.Name, q.Qtype)
 }
 
 // Hit returns a dns message from the cache. If the message's TTL is expired nil
@@ -155,18 +143,17 @@ func (c *Cache) Hit(key string, msgid uint16) (isHit bool, BundleName string, _ 
 	pointer, exp, hit := c.Search(key)
 	if hit {
 		// Cache hit! \o/
-		if time.Since(exp) > 0 {
+		if -1*time.Since(exp) > 0 {
 			pointer.msg.Id = msgid
 			pointer.msg.Compress = true
-			// Even if something ended up with the TC bit *in* the cache, set it to off
 			pointer.msg.Truncated = false
 			for _, a := range pointer.msg.Answer {
 				a.Header().Ttl = uint32(time.Since(exp).Seconds() * -1)
 			}
-			return true, pointer.fastMap.dnsBundle, pointer.msg
+			return true, pointer.fastMap.DnsBundle, pointer.msg
 		}
 		// TODO Update program
-		return true, pointer.fastMap.dnsBundle, nil
+		return true, pointer.fastMap.DnsBundle, nil
 		// Expired! /o\
 	}
 	return false, "", nil

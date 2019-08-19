@@ -38,7 +38,7 @@ func (c *CacheClient) Exchange() (isHit bool, BundleName string, _ *dns.Msg) {
 	if c.cache == nil {
 		return false, "", nil
 	}
-	key := cache.Key(c.questionMessage.Question[0], c.ednsClientSubnetIP)
+	key := cache.Key(c.questionMessage.Question[0])
 	isHit, bundleName, msg := c.cache.Hit(key, c.questionMessage.Id)
 	if isHit {
 		log.Debugf("Cache hit: %s", key)

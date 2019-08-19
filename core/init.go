@@ -27,6 +27,10 @@ func InitServer(configFilePath string) {
 	}
 	s := inbound.NewServer(conf.BindAddress, conf.DebugHTTPAddress, dispatcher, conf.RejectQType)
 
+	// cronTask := cron.NewCacheManager(dispatcher.Cache, conf.CacheCrontab, conf.Dectector)
+
+	// cronTask.Crontab()
+
 	s.Run()
 
 }

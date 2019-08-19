@@ -39,8 +39,7 @@ func (d *Dispatcher) Exchange(query *dns.Msg, inboundIP string) *dns.Msg {
 		ClientsBundle[name] = clients.NewClientBundle(query, v, inboundIP, d.MinimumTTL, d.Cache, name, d.DomainTTLMap)
 	}
 
-	var ActiveClientBundle *clients.RemoteClientBundle = nil
-
+	var ActiveClientBundle *clients.RemoteClientBundle
 	// Priority: client(host), cache, onlyprimary, domain, ip,
 	// local hosts, ip
 	localClient := clients.NewLocalClient(query, d.Hosts, d.MinimumTTL, d.DomainTTLMap)
@@ -57,11 +56,11 @@ func (d *Dispatcher) Exchange(query *dns.Msg, inboundIP string) *dns.Msg {
 		if msg != nil {
 			return msg
 		} else if msg == nil && bundleName != "" {
+			log.Infof("Hit Cache, msg is expiration, but bundleName: %s\n", bundleName)
 			ActiveClientBundle = ClientsBundle[bundleName]
 			if result := ActiveClientBundle.Exchange(true); result != nil {
-				if d.Cache != nil && result.ResponseMessage != nil {
-					d.CacheResultIfNeeded(result)
-				}
+				result.BundleName = ActiveClientBundle.Name
+				d.CacheResultIfNeeded(result)
 				return result.ResponseMessage
 			}
 		}
@@ -69,9 +68,9 @@ func (d *Dispatcher) Exchange(query *dns.Msg, inboundIP string) *dns.Msg {
 
 	// local Domain, ip
 	ch := make(chan *HitTask, len(ClientsBundle))
-	// hitList := list.New()
 	bundleLenght := len(ClientsBundle)
 	var c = new(HitTask)
+
 	for bunchName := range ClientsBundle {
 		go func(ch chan *HitTask, bunchName string) {
 			c.isHit = d.isSelectDomain(ClientsBundle[bunchName], d.DNSFilter[bunchName].DomainList)
@@ -80,29 +79,27 @@ func (d *Dispatcher) Exchange(query *dns.Msg, inboundIP string) *dns.Msg {
 			return
 		}(ch, bunchName)
 	}
+
 	for bundleLenght > 0 {
 		if x, ok := <-ch; ok {
 			bundleLenght--
 			if x.isHit {
-				// hitList.PushBack(x.hitRemoteClientBundle)
 				ActiveClientBundle = x.hitRemoteClientBundle
 				break
-				// histList is success hit list, sort by match time
-				// use first hit bundle.
 			}
 		}
 	}
+
 	if ActiveClientBundle == nil && d.DefaultDNSBundle == "" {
-		log.Info("Domain match failed return nil; DefaultDNSBundle is nil, return nil")
+		log.Warn("Domain match failed return nil; DefaultDNSBundle is nil, return nil")
 		return nil
 	} else if ActiveClientBundle == nil && d.DefaultDNSBundle != "" {
-		log.Infof("Use default dns bundle: %s", d.DefaultDNSBundle)
+		log.Warnf("Use default dns bundle: %s", d.DefaultDNSBundle)
 		ActiveClientBundle = ClientsBundle[d.DefaultDNSBundle]
 	}
 	if result := ActiveClientBundle.Exchange(true); result != nil {
-		if d.Cache != nil && result.ResponseMessage != nil {
-			d.CacheResultIfNeeded(result)
-		}
+		result.BundleName = ActiveClientBundle.Name
+		d.CacheResultIfNeeded(result)
 		return result.ResponseMessage
 	}
 	return nil
@@ -122,10 +119,11 @@ func (d *Dispatcher) Exchange(query *dns.Msg, inboundIP string) *dns.Msg {
 }
 
 func (d *Dispatcher) CacheResultIfNeeded(cacheMessage *clients.CacheMessage) {
-
-	key := cache.Key(cacheMessage.QuestionMessage.Question[0], common.GetEDNSClientSubnetIP(cacheMessage.QuestionMessage))
-	d.Cache.Insert(key, cacheMessage.ResponseMessage, uint32(cacheMessage.MinimumTTL), cacheMessage.BundleName, cacheMessage.DomainName)
-
+	if d.Cache != nil && cacheMessage.ResponseMessage != nil {
+		key := cache.Key(cacheMessage.QuestionMessage.Question[0])
+		d.Cache.Insert(key, cacheMessage.ResponseMessage, uint32(cacheMessage.MinimumTTL), cacheMessage.BundleName, cacheMessage.DomainName)
+	}
+	return
 }
 
 func (d *Dispatcher) isExchangeForIPv6(query *dns.Msg) bool {

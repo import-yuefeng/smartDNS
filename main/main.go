@@ -50,7 +50,7 @@ func main() {
 		log.SetLevel(log.DebugLevel)
 	} else {
 		// except for program has Warn
-		log.SetLevel(log.WarnLevel)
+		log.SetLevel(log.FatalLevel)
 	}
 
 	if *logPath != "" {

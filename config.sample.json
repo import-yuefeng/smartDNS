@@ -88,7 +88,7 @@
       "Matcher": "suffix-tree"
     },
     "CN-DNS": {
-      "IPNetworkFile": "",
+      "IPNetworkFile": "cn.ip",
       "DomainFile": "cn.domain",
       "Matcher": "suffix-tree"
     },

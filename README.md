@@ -26,7 +26,6 @@ corresponding git version tag. The README in master branch are subject to change
   example: HK-DNS, CN-DNS, US-DNS
 + Support DNS cache update automatically(FastTable)
 + 
-+ With EDNS Client Subnet (ECS) [RFC7871](https://tools.ietf.org/html/rfc7871)
 + Dispatcher
     + Custom domain
     + Custom IP network

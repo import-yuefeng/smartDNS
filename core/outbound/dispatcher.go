@@ -19,6 +19,7 @@ import (
 	"github.com/import-yuefeng/smartDNS/core/outbound/clients"
 )
 
+// Dispatcher struct
 type Dispatcher struct {
 	RedirectIPv6Record bool
 	MinimumTTL         int
@@ -30,20 +31,24 @@ type Dispatcher struct {
 	Cache              *cache.Cache
 }
 
+// BundleMsg struct isSelectDomain func return match result
 type BundleMsg struct {
 	result     *clients.CacheMessage
 	bundleName string
 }
 
+// Bundle struct is map for bundleName <-> RemoteClientBundle
 type Bundle struct {
 	ClientBundle map[string]*clients.RemoteClientBundle
 }
 
+// HitTask struct be used matching domain list
 type HitTask struct {
 	hitRemoteClientBundle *clients.RemoteClientBundle
 	isHit                 bool
 }
 
+// Exchange func will dispatch dns query (Priority: client(hosts & ip), cache-lru, domain list, ip list, defaultDNS)
 func (d *Dispatcher) Exchange(query *dns.Msg, inboundIP string) *dns.Msg {
 	bundle := new(Bundle)
 	bundle.ClientBundle = make(map[string]*clients.RemoteClientBundle)
@@ -52,7 +57,6 @@ func (d *Dispatcher) Exchange(query *dns.Msg, inboundIP string) *dns.Msg {
 	}
 
 	var ActiveClientBundle *clients.RemoteClientBundle
-	// Priority: client(host), cache, onlyprimary, domain, ip,
 	// local hosts, ip
 	localClient := clients.NewLocalClient(query, d.Hosts, d.MinimumTTL, d.DomainTTLMap)
 	resp := localClient.Exchange()
@@ -123,6 +127,7 @@ func (d *Dispatcher) Exchange(query *dns.Msg, inboundIP string) *dns.Msg {
 
 }
 
+// CacheResultIfNeeded func will insert cache to lru cache link-list
 func (d *Dispatcher) CacheResultIfNeeded(cacheMessage *clients.CacheMessage) {
 	if d.Cache != nil && cacheMessage.ResponseMessage != nil {
 		key := cache.Key(cacheMessage.QuestionMessage.Question[0])
@@ -169,11 +174,11 @@ func (d *Dispatcher) selectByIPNetwork(bundle *Bundle) *BundleMsg {
 	Response := make(map[string]*clients.CacheMessage)
 
 	for name, c := range bundle.ClientBundle {
-		go func(c *clients.RemoteClientBundle, ch chan *BundleMsg) {
+		go func(c *clients.RemoteClientBundle, ch chan *BundleMsg, bundleName string) {
 			result := c.Exchange(true)
-			ch <- &BundleMsg{result, name}
+			ch <- &BundleMsg{result, bundleName}
 			return
-		}(c, ch)
+		}(c, ch, name)
 	}
 
 	for i := 0; i < len(bundle.ClientBundle); {
@@ -181,26 +186,32 @@ func (d *Dispatcher) selectByIPNetwork(bundle *Bundle) *BundleMsg {
 			Response[c.bundleName] = c.result
 			i++
 		}
-		if i >= int(float64(len(bundle.ClientBundle))*0.75) {
+		if i >= int(float64(len(bundle.ClientBundle))*0.6) {
 			break
 		}
 	}
-	for bundleName, a := range Response {
-		for i := range a.ResponseMessage.Answer {
-			log.Debug("Try to match response ip address with IP network")
-			var ip net.IP
-
-			if a.ResponseMessage.Answer[i].Header().Rrtype == dns.TypeA {
-				ip = net.ParseIP(a.ResponseMessage.Answer[i].(*dns.A).A.String())
-			} else if a.ResponseMessage.Answer[i].Header().Rrtype == dns.TypeAAAA {
-				ip = net.ParseIP(a.ResponseMessage.Answer[i].(*dns.AAAA).AAAA.String())
-			} else {
+	if Response != nil {
+		for bundleName, a := range Response {
+			if a == nil {
 				continue
 			}
-			if common.IsIPMatchList(ip, d.DNSFilter[bundleName].IPNetworkList, true, bundleName) {
-				log.Debugf("(IPMatcher)Finally use: %s", bundleName)
-				return &BundleMsg{a, bundleName}
+			for i := range a.ResponseMessage.Answer {
+				log.Debug("Try to match response ip address with IP network")
+				var ip net.IP
+
+				if a.ResponseMessage.Answer[i].Header().Rrtype == dns.TypeA {
+					ip = net.ParseIP(a.ResponseMessage.Answer[i].(*dns.A).A.String())
+				} else if a.ResponseMessage.Answer[i].Header().Rrtype == dns.TypeAAAA {
+					ip = net.ParseIP(a.ResponseMessage.Answer[i].(*dns.AAAA).AAAA.String())
+				} else {
+					continue
+				}
+				if common.IsIPMatchList(ip, d.DNSFilter[bundleName].IPNetworkList, true, bundleName) {
+					log.Debugf("(IPMatcher)Finally use: %s", bundleName)
+					return &BundleMsg{a, bundleName}
+				}
 			}
+
 		}
 		log.Debug("IP network match failed, return nil")
 	}

@@ -22,7 +22,7 @@ import (
 )
 
 var (
-	version = "0.0.1"
+	version = "0.0.2"
 
 	configPath      = flag.String("c", "./config.json", "config file path")
 	logPath         = flag.String("l", "", "log file path")

@@ -6,7 +6,6 @@ require (
 	github.com/konsorten/go-windows-terminal-sequences v1.0.2 // indirect
 	github.com/miekg/dns v1.1.15
 	github.com/robfig/cron v1.2.0
-	github.com/shawn1m/overture v0.0.0-20190729150044-6fbb9c2ead40 // indirect
 	github.com/sirupsen/logrus v1.4.2
 	github.com/sparrc/go-ping v0.0.0-20190613174326-4e5b6552494c
 	github.com/stretchr/objx v0.2.0 // indirect

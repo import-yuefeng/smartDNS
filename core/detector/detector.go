@@ -9,10 +9,10 @@ package detector
 import (
 	"container/list"
 
-	"github.com/import-yuefeng/smartDNS/core/common"
+	"github.com/import-yuefeng/smartDNS/core/cache"
 )
 
 type Detector interface {
 	Detect() (fastTable *list.List)
-	Sort(fastTable *list.List) (fastMap *common.FastMap)
+	Sort(fastTable *list.List) (fastMap *cache.FastMap)
 }

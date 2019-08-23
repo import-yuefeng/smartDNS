@@ -70,7 +70,17 @@ func (c *Cache) Head() *list.List { return c.head }
 
 // Remove any elem based on key
 func (c *Cache) Remove(key string) {
+}
 
+func (c *Cache) Update(key string, fastMap *FastMap) bool {
+	_, _, hit := c.Search(key)
+	if hit {
+		c.Lock()
+		c.domain[key].fastMap = fastMap
+		c.Unlock()
+		return true
+	}
+	return false
 }
 
 // RemoveTail func remove elem for LRU tail
@@ -129,6 +139,14 @@ func (c *Cache) Search(key string) (*elem, time.Time, bool) {
 	}
 	c.RUnlock()
 	return nil, time.Time{}, false
+}
+
+func (c *Cache) GetFastTable(key string) *FastMap {
+	pointer, _, hit := c.Search(key)
+	if hit {
+		return pointer.fastMap
+	}
+	return nil
 }
 
 // Key creates a hash key from a question section.

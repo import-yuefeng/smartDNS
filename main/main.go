@@ -30,6 +30,7 @@ var (
 	processorNumber = flag.Int("p", runtime.NumCPU(), "number of processor to use")
 	isShowVersion   = flag.Bool("V", false, "current version of smartDNS")
 	query           = flag.String("q", "", "query DNS")
+	smart           = flag.Bool("s", false, "start smart-study feature")
 )
 
 func main() {
@@ -67,5 +68,5 @@ func main() {
 
 	runtime.GOMAXPROCS(*processorNumber)
 
-	core.InitServer(*configPath)
+	core.InitServer(*configPath, smart)
 }

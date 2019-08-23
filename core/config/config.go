@@ -88,7 +88,7 @@ func NewConfig(configFile string) *Config {
 		log.Info("Hosts file has been loaded successfully")
 	}
 	if len(config.DNSBunch) != len(config.DNSFilter) {
-		log.Fatalf("DNSBunch != DNSFilter", err)
+		log.Fatalf("DNSBunch != DNSFilter")
 		os.Exit(1)
 	}
 	return config

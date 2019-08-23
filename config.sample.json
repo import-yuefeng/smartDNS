@@ -28,32 +28,6 @@
         }
       }
     ],
-    "SB-DNS": [
-      {
-        "Name": "IPV4-1",
-        "Address": "185.222.222.222:53",
-        "Protocol": "udp",
-        "SOCKS5Address": "",
-        "Timeout": 6,
-        "EDNSClientSubnet": {
-          "Policy": "disable",
-          "ExternalIP": "",
-          "NoCookie": false
-        }
-      },
-      {
-        "Name": "IPV4-2",
-        "Address": "185.184.222.222:53",
-        "Protocol": "udp",
-        "SOCKS5Address": "",
-        "Timeout": 6,
-        "EDNSClientSubnet": {
-          "Policy": "disable",
-          "ExternalIP": "",
-          "NoCookie": false
-        }
-      }
-    ],
     "CN-DNS": [
       {
         "Name": "ChinaTelecom-CN",
@@ -79,8 +53,35 @@
           "NoCookie": false
         }
       }
+    ],
+    "SB-DNS": [
+      {
+        "Name": "SB-1",
+        "Address": "185.222.222.222:53",
+        "Protocol": "udp",
+        "SOCKS5Address": "",
+        "Timeout": 6,
+        "EDNSClientSubnet": {
+          "Policy": "disable",
+          "ExternalIP": "",
+          "NoCookie": false
+        }
+      },
+      {
+        "Name": "SB-2",
+        "Address": "185.184.222.222:53",
+        "Protocol": "udp",
+        "SOCKS5Address": "",
+        "Timeout": 6,
+        "EDNSClientSubnet": {
+          "Policy": "disable",
+          "ExternalIP": "",
+          "NoCookie": false
+        }
+      }
     ]
   },
+  
   "DNSFilter": {
     "HK-DNS": {
       "IPNetworkFile": "",
@@ -94,7 +95,7 @@
     },
     "SB-DNS": {
       "IPNetworkFile": "",
-      "DomainFile": "cn.domain",
+      "DomainFile": "hk.domain",
       "Matcher": "suffix-tree"
     }
   },

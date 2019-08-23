@@ -14,6 +14,7 @@ import (
 
 	"github.com/import-yuefeng/smartDNS/core/cache"
 	"github.com/import-yuefeng/smartDNS/core/common"
+	"github.com/import-yuefeng/smartDNS/core/cron"
 	"github.com/import-yuefeng/smartDNS/core/hosts"
 	"github.com/import-yuefeng/smartDNS/core/matcher"
 	"github.com/import-yuefeng/smartDNS/core/outbound/clients"
@@ -29,6 +30,9 @@ type Dispatcher struct {
 	DNSBunch           map[string][]*common.DNSUpstream
 	Hosts              *hosts.Hosts
 	Cache              *cache.Cache
+	CacheTimer         *cron.CacheUpdate
+	CacheCron          *cron.CacheManager
+	SmartDNS           bool
 }
 
 // BundleMsg struct isSelectDomain func return match result
@@ -76,7 +80,7 @@ func (d *Dispatcher) Exchange(query *dns.Msg, inboundIP string) *dns.Msg {
 			ActiveClientBundle = bundle.ClientBundle[bundleName]
 			if result := ActiveClientBundle.Exchange(true); result != nil {
 				result.BundleName = ActiveClientBundle.Name
-				d.CacheResultIfNeeded(result)
+				d.CacheResultIfNeeded(result, bundle.ClientBundle)
 				return result.ResponseMessage
 			}
 		}
@@ -109,7 +113,7 @@ func (d *Dispatcher) Exchange(query *dns.Msg, inboundIP string) *dns.Msg {
 		log.Warnf("Domain match failed. will check ip list or use default DNS: %s(If not nil)", d.DefaultDNSBundle)
 		if resp := d.selectByIPNetwork(bundle); resp != nil {
 			log.Info("Match ip!")
-			d.CacheResultIfNeeded(resp.result)
+			d.CacheResultIfNeeded(resp.result, bundle.ClientBundle)
 			return resp.result.ResponseMessage
 		}
 	}
@@ -119,7 +123,7 @@ func (d *Dispatcher) Exchange(query *dns.Msg, inboundIP string) *dns.Msg {
 	}
 	if result := ActiveClientBundle.Exchange(true); result != nil {
 		result.BundleName = ActiveClientBundle.Name
-		d.CacheResultIfNeeded(result)
+		d.CacheResultIfNeeded(result, bundle.ClientBundle)
 		return result.ResponseMessage
 	}
 
@@ -128,10 +132,21 @@ func (d *Dispatcher) Exchange(query *dns.Msg, inboundIP string) *dns.Msg {
 }
 
 // CacheResultIfNeeded func will insert cache to lru cache link-list
-func (d *Dispatcher) CacheResultIfNeeded(cacheMessage *clients.CacheMessage) {
+func (d *Dispatcher) CacheResultIfNeeded(cacheMessage *clients.CacheMessage, ClientBundle map[string]*clients.RemoteClientBundle) {
 	if d.Cache != nil && cacheMessage.ResponseMessage != nil {
 		key := cache.Key(cacheMessage.QuestionMessage.Question[0])
+		var ttl uint32
+		if len(cacheMessage.ResponseMessage.Answer) == 0 {
+			ttl = uint32(cacheMessage.MinimumTTL)
+		} else {
+			ttl = cacheMessage.ResponseMessage.Answer[0].Header().Ttl
+		}
+
 		d.Cache.Insert(key, cacheMessage.ResponseMessage, uint32(cacheMessage.MinimumTTL), cacheMessage.BundleName, cacheMessage.DomainName)
+		if fastTable := d.Cache.GetFastTable(key); fastTable != nil && d.SmartDNS {
+			d.CacheTimer.AddTask(ttl, cacheMessage, fastTable, ClientBundle)
+			log.Infof("Add cacheTimer task %v", cacheMessage.ResponseMessage.Answer)
+		}
 	}
 	return
 }
@@ -193,6 +208,8 @@ func (d *Dispatcher) selectByIPNetwork(bundle *Bundle) *BundleMsg {
 	if Response != nil {
 		for bundleName, a := range Response {
 			if a == nil {
+				continue
+			} else if a.ResponseMessage == nil {
 				continue
 			}
 			for i := range a.ResponseMessage.Answer {

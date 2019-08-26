@@ -103,7 +103,7 @@
   "HostsFile": "./hosts",
   "MinimumTTL": 0,
   "DomainTTLFile": "./domain_ttl_sample",
-  "CacheSize": 1000,
+  "CacheSize": 100,
   "CacheCrontab": "*/5 * * * * ?",
   "Dectector": "ping",
   "RejectQType": [

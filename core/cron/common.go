@@ -5,17 +5,13 @@ import (
 	"github.com/miekg/dns"
 )
 
-type CacheManager struct {
-	c        *cache.Cache
-	interval string
-	detector string
-}
-
 type Task struct {
 	msg *dns.Msg
 }
 
-type CacheUpdate struct {
+type CacheManager struct {
 	TaskChan chan *Task
 	Cache    *cache.Cache
+	Interval string
+	Detector string
 }

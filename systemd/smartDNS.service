@@ -1,0 +1,20 @@
+[Unit]
+Description=smartDNS service daemon
+Documentation=https://github.com/import-yuefeng/smartDNS
+After=network.target 
+# Wants=nothing
+
+[Service]
+User=nobody
+Group=nogroup
+LimitNOFILE=32768
+EnvironmentFile=-/etc/smartDNS/
+ExecStart=/usr/local/bin/smartDNS ${DAEMON_ARGS}
+ExecReload=/bin/kill -HUP $MAINPID
+Type=simple
+KillMode=control-group
+Restart=on-failure
+RestartSec=60s
+
+[Install]
+WantedBy=multi-user.target

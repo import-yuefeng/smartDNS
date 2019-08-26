@@ -30,14 +30,17 @@ func InitServer(configFilePath string, smart *bool) {
 		DomainTTLMap:       conf.DomainTTLMap,
 		Hosts:              conf.Hosts,
 		Cache:              conf.Cache,
-		CacheTimer:         new(cron.CacheUpdate),
+		CacheTimer:         new(cron.CacheManager),
 		SmartDNS:           *smart,
 	}
 	s := inbound.NewServer(conf.BindAddress, conf.DebugHTTPAddress, dispatcher, conf.RejectQType)
 	if *smart {
 		dispatcher.CacheTimer.TaskChan = make(chan *cron.Task, 1000)
 		dispatcher.CacheTimer.Cache = dispatcher.Cache
+		dispatcher.CacheTimer.Interval = conf.CacheCrontab
+		dispatcher.CacheTimer.Detector = conf.Dectector
 		go dispatcher.CacheTimer.Handle()
+		go dispatcher.CacheTimer.Crontab()
 	}
 
 	s.Run()

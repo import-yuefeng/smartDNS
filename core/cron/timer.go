@@ -15,18 +15,22 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func (worker *CacheUpdate) AddTask(expiration uint32, cacheMessage *clients.CacheMessage, fastMap *cache.FastMap, bundle map[string]*clients.RemoteClientBundle) {
-	if expiration <= 30 {
+func (worker *CacheManager) AddTask(expiration uint32, cacheMessage *clients.CacheMessage, fastMap *cache.FastMap, bundle map[string]*clients.RemoteClientBundle) {
+	if expiration < 100 {
 		// Set minimum update time
-		expiration = 30
+		expiration = 100
 	}
 	newTimer := time.NewTimer(time.Second * time.Duration(expiration))
 	go func() {
 		<-newTimer.C
+		key := cache.Key(cacheMessage.ResponseMessage.Question[0])
+		if _, _, ok := worker.Cache.Search(key); !ok {
+			return
+		}
 		TaskDetector := ping.NewDetector(cacheMessage.ResponseMessage, fastMap, bundle)
 		fastMapList := TaskDetector.Detect()
 		fastMap := TaskDetector.Sort(fastMapList)
-		key := cache.Key(cacheMessage.ResponseMessage.Question[0])
+
 		if fastMap != nil && key != "" {
 			if success := worker.Cache.Update(key, fastMap); !success {
 				worker.Cache.Insert(key, cacheMessage.ResponseMessage, uint32(cacheMessage.MinimumTTL), cacheMessage.BundleName, cacheMessage.DomainName)
@@ -40,7 +44,7 @@ func (worker *CacheUpdate) AddTask(expiration uint32, cacheMessage *clients.Cach
 
 }
 
-func (worker *CacheUpdate) Handle() {
+func (worker *CacheManager) Handle() {
 	log.Info("Start CacheUpdate handle program\n")
 	for {
 		select {

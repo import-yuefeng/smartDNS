@@ -30,8 +30,7 @@ type Dispatcher struct {
 	DNSBunch           map[string][]*common.DNSUpstream
 	Hosts              *hosts.Hosts
 	Cache              *cache.Cache
-	CacheTimer         *cron.CacheUpdate
-	CacheCron          *cron.CacheManager
+	CacheTimer         *cron.CacheManager
 	SmartDNS           bool
 }
 

@@ -41,7 +41,7 @@ type Cache struct {
 	sync.RWMutex
 
 	capacity int
-	domain   map[string]*elem
+	domain   map[string]*list.Element
 	head     *list.List
 }
 
@@ -52,7 +52,7 @@ func New(capacity int) *Cache {
 	}
 
 	c := new(Cache)
-	c.domain = make(map[string]*elem)
+	c.domain = make(map[string]*list.Element)
 	c.capacity = capacity
 	c.head = list.New()
 
@@ -68,15 +68,24 @@ func (c *Cache) Size() int { return c.head.Len() }
 // Head func return link-list head point
 func (c *Cache) Head() *list.List { return c.head }
 
-// Remove any elem based on key
-func (c *Cache) Remove(key string) {
+// RemoveByKey any elem based on key
+func (c *Cache) RemoveByKey(key string) {
+	if delElem, ok := c.domain[key]; ok {
+		c.Lock()
+		c.head.Remove(delElem)
+		delete(c.domain, key)
+		// Use built-in functions for map
+		c.Unlock()
+	} else {
+		return
+	}
 }
 
 func (c *Cache) Update(key string, fastMap *FastMap) bool {
 	_, _, hit := c.Search(key)
 	if hit {
 		c.Lock()
-		c.domain[key].fastMap = fastMap
+		c.domain[key].Value.(*elem).fastMap = fastMap
 		c.Unlock()
 		return true
 	}
@@ -118,7 +127,7 @@ func (c *Cache) Insert(key string, m *dns.Msg, mTTL uint32, dnsBundleName string
 		newElem = new(elem)
 		newElem.expiration, newElem.msg, newElem.fastMap = time.Now().UTC().Add(ttlDuration), m.Copy(), fastMap
 		c.head.PushFront(newElem)
-		c.domain[key] = newElem
+		c.domain[key] = c.head.Front()
 	}
 	log.Debugf("Cached: %s", key)
 	c.Unlock()
@@ -135,12 +144,13 @@ func (c *Cache) Search(key string) (*elem, time.Time, bool) {
 		// find elem in cache
 		c.RUnlock()
 
-		return e, c.domain[key].expiration, true
+		return e.Value.(*elem), c.domain[key].Value.(*elem).expiration, true
 	}
 	c.RUnlock()
 	return nil, time.Time{}, false
 }
 
+// GetFastTable function return elem *FastMap based on key
 func (c *Cache) GetFastTable(key string) *FastMap {
 	pointer, _, hit := c.Search(key)
 	if hit {
@@ -196,7 +206,7 @@ func (c *Cache) Dump(nobody bool) (rs map[string][]string, cacheLength int) {
 	for k, e := range c.domain {
 		var vs []string
 
-		for _, a := range e.msg.Answer {
+		for _, a := range e.Value.(*elem).msg.Answer {
 			vs = append(vs, a.String())
 		}
 		rs[k] = vs

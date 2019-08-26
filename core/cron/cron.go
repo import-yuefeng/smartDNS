@@ -7,47 +7,40 @@
 package cron
 
 import (
-	"github.com/import-yuefeng/smartDNS/core/cache"
+	"github.com/robfig/cron"
 	log "github.com/sirupsen/logrus"
 )
 
-func NewCacheManager(c *cache.Cache, interval string, detector string) *CacheManager {
-	return &CacheManager{c, interval, detector}
-}
-
-func (cacheManager *CacheManager) UpdateTTL() {}
-
 func (cacheManager *CacheManager) AutoUpdate() {
 
-	var updateElemNum int
-	if cacheManager.c.Capacity() > cacheManager.c.Size() {
-		updateElemNum = 5
-	} else {
-		updateElemNum = 5 + cacheManager.c.Size() - cacheManager.c.Capacity()
+	var updateElemNum, delNum int
+	updateElemNum = cacheManager.Cache.Capacity() / 10
+	// cron updater will update 10%(capacity) elems
+	if cacheManager.Cache.Size() > cacheManager.Cache.Capacity() {
+		// lru-list is too long
+		delNum = cacheManager.Cache.Size() - cacheManager.Cache.Capacity()
 	}
-	log.Info(updateElemNum)
-	// TODO Add autoupdate logical
+	if delNum != 0 {
+		cacheManager.Cache.RemoveTail(delNum)
+	}
+	log.Infof("Cache info current: %d, updateTask: %d, Capacity: %d.", cacheManager.Cache.Size(), updateElemNum, cacheManager.Cache.Capacity())
+	// TODO add update func
+	cacheManager.Sort()
 
 }
 
-// func (cacheManager *CacheManager) SwitchDetector(msg *dns.Msg, fastMap *cache.FastMap, DNSBunch map[string][]*common.DNSUpstream) {
-// 	switch cacheManager.detector {
-// 	case "ping":
-// 		return ping.NewDetector(msg, fastMap, DNSBunch)
-// 	default:
-// 		log.Warnf("Detector %s does not exist, using ping as default", cacheManager.detector)
-// 		return ping.NewDetector(msg, fastMap, DNSBunch)
-// 	}
-// }
+func (cacheManager *CacheManager) Sort() {
+	return
+}
 
-// func (cacheManager *CacheManager) Crontab() {
-// 	// i := 0
-// 	c := cron.New()
-// 	spec := cacheManager.interval
+func (cacheManager *CacheManager) Crontab() {
+	// i := 0
+	c := cron.New()
+	spec := cacheManager.Interval
 
-// 	c.AddFunc(spec, cacheManager.Update)
-// 	c.Start()
+	c.AddFunc(spec, cacheManager.AutoUpdate)
+	c.Start()
 
-// 	select {}
+	select {}
 
-// }
+}

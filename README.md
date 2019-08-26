@@ -39,7 +39,7 @@ For custom IP network, overture will query the domain with primary DNS firstly. 
 is not matched then overture will finally use the alternative DNS servers.
 
 ## Structure
-<img src="https://github.com/import-yuefeng/smartDNS/blob/master/smartDnsStructure.png" width="300">
+<img src="https://github.com/import-yuefeng/smartDNS/blob/master/smartDnsStructure.png" width="900">
 
 ## Installation
 

@@ -143,9 +143,11 @@ func (d *Dispatcher) CacheResultIfNeeded(cacheMessage *clients.CacheMessage, Cli
 		}
 
 		d.Cache.Insert(key, cacheMessage.ResponseMessage, uint32(cacheMessage.MinimumTTL), cacheMessage.BundleName, cacheMessage.DomainName)
-		if fastTable := d.Cache.GetFastTable(key); fastTable != nil && d.SmartDNS {
-			d.CacheTimer.AddTask(ttl, cacheMessage, fastTable, ClientBundle)
-			log.Infof("Add cacheTimer task %v", cacheMessage.ResponseMessage.Answer)
+		if d.SmartDNS {
+			if fastTable := d.Cache.GetFastTable(key); fastTable != nil && cacheMessage.ResponseMessage.Answer != nil {
+				d.CacheTimer.AddTask(ttl, cacheMessage, fastTable, ClientBundle)
+				log.Infof("Add cacheTimer task %v", cacheMessage.ResponseMessage.Answer)
+			}
 		}
 	}
 	return

@@ -22,7 +22,7 @@ import (
 )
 
 var (
-	version = "0.0.2"
+	version = "0.0.3"
 
 	configPath      = flag.String("c", "./config.json", "config file path")
 	logPath         = flag.String("l", "", "log file path")
@@ -38,7 +38,6 @@ func main() {
 	// parse command-line flag
 	if *isShowVersion {
 		fmt.Println(version)
-		// println smartDNS version
 		return
 	}
 

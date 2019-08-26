@@ -81,7 +81,6 @@
       }
     ]
   },
-  
   "DNSFilter": {
     "HK-DNS": {
       "IPNetworkFile": "",
@@ -99,14 +98,14 @@
       "Matcher": "suffix-tree"
     }
   },
-  "DefaultDNSBundle":"HK-DNS",
+  "DefaultDNSBundle": "HK-DNS",
   "IPv6UseAlternativeDNS": false,
   "HostsFile": "./hosts",
   "MinimumTTL": 0,
   "DomainTTLFile": "./domain_ttl_sample",
   "CacheSize": 1000,
-  "CacheCrontab":"*/5 * * * * ?",
-  "Dectector":"ping",
+  "CacheCrontab": "*/5 * * * * ?",
+  "Dectector": "ping",
   "RejectQType": [
     255
   ]

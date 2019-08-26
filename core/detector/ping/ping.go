@@ -50,9 +50,11 @@ func (data *Pinger) Detect() (fastTable *list.List) {
 	}
 	for i := 0; i < len(data.bundle); {
 		if c := <-ch; c != nil {
+			if c.msg.Answer == nil {
+				continue
+			}
 			dnsRespon := strings.Fields(c.msg.Answer[0].String())
 			domainToIP[c.bundleName] = dnsRespon[4]
-			log.Info(dnsRespon[4])
 			i++
 		}
 		if i >= int(float64(len(data.bundle))*0.6) {
@@ -68,7 +70,7 @@ func (data *Pinger) Detect() (fastTable *list.List) {
 			pinger, err := ping.NewPinger(ip)
 			if err != nil {
 				log.Error(err)
-				panic(err)
+				return
 			}
 			pinger.Count = 1
 			pinger.Run()

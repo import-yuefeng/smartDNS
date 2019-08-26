@@ -16,6 +16,10 @@ import (
 )
 
 func (worker *CacheUpdate) AddTask(expiration uint32, cacheMessage *clients.CacheMessage, fastMap *cache.FastMap, bundle map[string]*clients.RemoteClientBundle) {
+	if expiration <= 30 {
+		// Set minimum update time
+		expiration = 30
+	}
 	newTimer := time.NewTimer(time.Second * time.Duration(expiration))
 	go func() {
 		<-newTimer.C
@@ -23,7 +27,6 @@ func (worker *CacheUpdate) AddTask(expiration uint32, cacheMessage *clients.Cach
 		fastMapList := TaskDetector.Detect()
 		fastMap := TaskDetector.Sort(fastMapList)
 		key := cache.Key(cacheMessage.ResponseMessage.Question[0])
-		log.Info(key, fastMap)
 		if fastMap != nil && key != "" {
 			if success := worker.Cache.Update(key, fastMap); !success {
 				worker.Cache.Insert(key, cacheMessage.ResponseMessage, uint32(cacheMessage.MinimumTTL), cacheMessage.BundleName, cacheMessage.DomainName)
@@ -41,11 +44,10 @@ func (worker *CacheUpdate) Handle() {
 	log.Info("Start CacheUpdate handle program\n")
 	for {
 		select {
-		case msg, ok := <-worker.TaskChan:
+		case _, ok := <-worker.TaskChan:
 			if !ok {
 				break
 			}
-			log.Infof("Program %d: %v \n", time.Now().Unix(), msg.msg.Answer)
 		}
 	}
 

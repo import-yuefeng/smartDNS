@@ -38,6 +38,9 @@ Overture can force custom domain DNS queries to use selected DNS when applicable
 For custom IP network, overture will query the domain with primary DNS firstly. If the answer is empty or the IP
 is not matched then overture will finally use the alternative DNS servers.
 
+## Structure
+<img src="https://github.com/import-yuefeng/smartDNS/blob/master/smartDnsStructure.png" width="300">
+
 ## Installation
 
 You can download binary releases from the [release](https://github.com/import-yuefeng/smartDNS/releases).

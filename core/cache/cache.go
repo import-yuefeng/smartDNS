@@ -68,6 +68,12 @@ func (c *Cache) Size() int { return c.head.Len() }
 // Head func return link-list head point
 func (c *Cache) Head() *list.List { return c.head }
 
+func (c *Cache) ReturnBack() *elem {
+	backElem := c.head.Back()
+	c.head.MoveToFront(backElem)
+	return backElem.Value.(*elem)
+}
+
 // RemoveByKey any elem based on key
 func (c *Cache) RemoveByKey(key string) {
 	if delElem, ok := c.domain[key]; ok {

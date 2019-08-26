@@ -9,13 +9,15 @@ package cron
 import (
 	"github.com/robfig/cron"
 	log "github.com/sirupsen/logrus"
+
+	"container/list"
 )
 
 func (cacheManager *CacheManager) AutoUpdate() {
 
 	var updateElemNum, delNum int
-	updateElemNum = cacheManager.Cache.Capacity() / 10
-	// cron updater will update 10%(capacity) elems
+	updateElemNum = cacheManager.Cache.Size() / 4
+	// cron updater will update 25%(capacity) elems
 	if cacheManager.Cache.Size() > cacheManager.Cache.Capacity() {
 		// lru-list is too long
 		delNum = cacheManager.Cache.Size() - cacheManager.Cache.Capacity()
@@ -24,13 +26,22 @@ func (cacheManager *CacheManager) AutoUpdate() {
 		cacheManager.Cache.RemoveTail(delNum)
 	}
 	log.Infof("Cache info current: %d, updateTask: %d, Capacity: %d.", cacheManager.Cache.Size(), updateElemNum, cacheManager.Cache.Capacity())
-	// TODO add update func
-	cacheManager.Sort()
 
+	updateList := cacheManager.Sort(updateElemNum)
+	for i := 0; i < updateElemNum; i++ {
+		item := updateList.Back()
+		updateList.Remove(item)
+		// TODO add update func
+	}
 }
 
-func (cacheManager *CacheManager) Sort() {
-	return
+func (cacheManager *CacheManager) Sort(updateElemNum int) *list.List {
+	updateList := list.New()
+
+	for i := 0; i < updateElemNum; i++ {
+		updateList.PushFront(cacheManager.Cache.ReturnBack())
+	}
+	return updateList
 }
 
 func (cacheManager *CacheManager) Crontab() {

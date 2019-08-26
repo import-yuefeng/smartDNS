@@ -7,6 +7,7 @@
 package cron
 
 import (
+	"math/rand"
 	"time"
 
 	"github.com/import-yuefeng/smartDNS/core/cache"
@@ -16,9 +17,10 @@ import (
 )
 
 func (worker *CacheManager) AddTask(expiration uint32, cacheMessage *clients.CacheMessage, fastMap *cache.FastMap, bundle map[string]*clients.RemoteClientBundle) {
-	if expiration < 100 {
+	if expiration < 30 {
 		// Set minimum update time
-		expiration = 100
+		rand.Seed(time.Now().Unix())
+		expiration += uint32(rand.Intn(100))
 	}
 	newTimer := time.NewTimer(time.Second * time.Duration(expiration))
 	go func() {

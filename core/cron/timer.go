@@ -17,6 +17,11 @@ import (
 )
 
 func (worker *CacheManager) AddTask(expiration uint32, cacheMessage *clients.CacheMessage, fastMap *cache.FastMap, bundle map[string]*clients.RemoteClientBundle) {
+	if worker.TaskSum >= int(worker.Cache.Capacity()*2) {
+		log.Infof("Too many tasks! Task: %d\n", worker.TaskSum)
+		return
+	}
+	worker.TaskSum++
 	if expiration < 30 {
 		// Set minimum update time
 		rand.Seed(time.Now().Unix())
@@ -25,6 +30,7 @@ func (worker *CacheManager) AddTask(expiration uint32, cacheMessage *clients.Cac
 	newTimer := time.NewTimer(time.Second * time.Duration(expiration))
 	go func() {
 		<-newTimer.C
+		worker.TaskChan <- true
 		key := cache.Key(cacheMessage.ResponseMessage.Question[0])
 		if _, _, ok := worker.Cache.Search(key); !ok {
 			return
@@ -38,10 +44,11 @@ func (worker *CacheManager) AddTask(expiration uint32, cacheMessage *clients.Cac
 				worker.Cache.Insert(key, cacheMessage.ResponseMessage, uint32(cacheMessage.MinimumTTL), cacheMessage.BundleName, cacheMessage.DomainName)
 			}
 			log.Infof("task: %s , time: %d expired\n", cacheMessage.ResponseMessage.Answer, expiration)
-			go worker.AddTask(expiration, cacheMessage, fastMap, bundle)
+			worker.AddTask(expiration, cacheMessage, fastMap, bundle)
 		} else {
 			log.Warn("fastMap is nil!")
 		}
+		return
 	}()
 
 }
@@ -53,6 +60,9 @@ func (worker *CacheManager) Handle() {
 		case _, ok := <-worker.TaskChan:
 			if !ok {
 				break
+			} else {
+				log.Info(worker.TaskSum)
+				worker.TaskSum--
 			}
 		}
 	}

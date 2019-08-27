@@ -35,10 +35,10 @@ func InitServer(configFilePath string, smart *bool) {
 	}
 	s := inbound.NewServer(conf.BindAddress, conf.DebugHTTPAddress, dispatcher, conf.RejectQType)
 	if *smart {
-		dispatcher.CacheTimer.TaskChan = make(chan *cron.Task, 1000)
+		dispatcher.CacheTimer.TaskChan = make(chan bool, 1000)
 		dispatcher.CacheTimer.Cache = dispatcher.Cache
 		dispatcher.CacheTimer.Interval = conf.CacheCrontab
-		dispatcher.CacheTimer.Detector = conf.Dectector
+		dispatcher.CacheTimer.TaskSum = 0
 		go dispatcher.CacheTimer.Handle()
 		go dispatcher.CacheTimer.Crontab()
 	}

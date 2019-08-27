@@ -89,6 +89,12 @@ func (c *Cache) RemoveByKey(key string) {
 
 func (c *Cache) Update(key string, fastMap *FastMap) bool {
 	_, _, hit := c.Search(key)
+	defer func() {
+		if err := recover(); err != nil {
+			log.Error(err)
+		}
+	}()
+
 	if hit {
 		c.Lock()
 		c.domain[key].Value.(*elem).fastMap = fastMap
@@ -103,9 +109,21 @@ func (c *Cache) RemoveTail(num int) {
 	// need to delete num elems
 	c.Lock()
 	for i := c.head.Back(); i != nil && num != 0; i = c.head.Back() {
-		key := Key(i.Value.(*elem).msg.Question[0])
+		defer func() {
+			if err := recover(); err != nil {
+				log.Error(err)
+			}
+		}()
+
+		switch v := i.Value.(type) {
+		case *elem:
+			key := Key(i.Value.(*elem).msg.Question[0])
+			delete(c.domain, key)
+		case interface{}:
+			log.Info(i.Value, v)
+		}
 		c.head.Remove(i)
-		delete(c.domain, key)
+
 		// Use built-in functions for map
 		num--
 	}

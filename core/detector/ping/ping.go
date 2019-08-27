@@ -8,6 +8,7 @@ package ping
 
 import (
 	"container/list"
+	"reflect"
 	"strings"
 
 	"github.com/import-yuefeng/smartDNS/core/cache"
@@ -32,7 +33,17 @@ func NewDetector(msg *dns.Msg, fastMap *cache.FastMap, bundle map[string]*client
 }
 
 func (data *Pinger) Sort(fastTable *list.List) (fastMap *cache.FastMap) {
-	return fastTable.Front().Value.(*cache.FastMap)
+	defer func() *cache.FastMap {
+		if err := recover(); err != nil {
+			log.Error(err)
+		}
+		return nil
+	}()
+
+	if reflect.DeepEqual(fastTable, list.New()) {
+		return fastTable.Front().Value.(*cache.FastMap)
+	}
+	return nil
 }
 
 func (data *Pinger) Detect() (fastTable *list.List) {
@@ -40,6 +51,13 @@ func (data *Pinger) Detect() (fastTable *list.List) {
 	domainToIP := make(map[string]string)
 	var ch chan *BundleMsg
 	ch = make(chan *BundleMsg, len(data.bundle))
+
+	defer func() {
+		if err := recover(); err != nil {
+			log.Error(err)
+		}
+		return
+	}()
 
 	for name, c := range data.bundle {
 		go func(c *clients.RemoteClientBundle, ch chan *BundleMsg, bundleName string) {
@@ -50,9 +68,11 @@ func (data *Pinger) Detect() (fastTable *list.List) {
 	}
 	for i := 0; i < len(data.bundle); {
 		if c := <-ch; c != nil {
-			if c.msg.Answer == nil {
+			if c.msg == nil && len(c.msg.Answer) == 0 && c.msg.Answer == nil {
 				continue
 			}
+			log.Info(c.msg.Answer)
+			log.Info(c.msg.Answer[0])
 			dnsRespon := strings.Fields(c.msg.Answer[0].String())
 			domainToIP[c.bundleName] = dnsRespon[4]
 			i++

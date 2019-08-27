@@ -10,8 +10,8 @@ type Task struct {
 }
 
 type CacheManager struct {
-	TaskChan chan *Task
+	TaskChan chan bool
 	Cache    *cache.Cache
 	Interval string
-	Detector string
+	TaskSum  int
 }

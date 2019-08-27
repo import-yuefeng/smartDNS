@@ -13,6 +13,9 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	_ "net/http/pprof"
+
+	// pprof test tools
 	"os"
 	"runtime"
 

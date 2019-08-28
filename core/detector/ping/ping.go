@@ -10,6 +10,7 @@ import (
 	"container/list"
 	"reflect"
 	"strings"
+	"time"
 
 	"github.com/import-yuefeng/smartDNS/core/cache"
 	"github.com/import-yuefeng/smartDNS/core/outbound/clients"
@@ -92,6 +93,7 @@ func (data *Pinger) Detect() (fastTable *list.List) {
 				log.Error(err)
 				return
 			}
+			pinger.Timeout = time.Second * 10
 			pinger.Count = 1
 			pinger.Run()
 			stat := pinger.Statistics()

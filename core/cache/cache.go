@@ -12,7 +12,7 @@ package cache
 
 import (
 	"container/list"
-	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -185,7 +185,11 @@ func (c *Cache) GetFastTable(key string) *FastMap {
 
 // Key creates a hash key from a question section.
 func Key(q dns.Question) string {
-	return fmt.Sprintf("%s %d", q.Name, q.Qtype)
+	var key strings.Builder
+	key.WriteString(q.Name)
+	Qtype := []byte{byte(q.Qtype), byte(q.Qtype >> 8)}
+	key.Write(Qtype)
+	return key.String()
 }
 
 // Hit returns a dns message from the cache. If the message's TTL is expired nil

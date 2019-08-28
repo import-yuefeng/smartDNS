@@ -61,7 +61,7 @@ func (worker *CacheManager) Handle() {
 			if !ok {
 				break
 			} else {
-				log.Info(worker.TaskSum)
+				log.Info("Now timer task: ", worker.TaskSum)
 				worker.TaskSum--
 			}
 		}
